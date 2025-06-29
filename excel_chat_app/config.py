@@ -1,5 +1,3 @@
-# excel_chat_app/config.py
-
 CODE_GENERATION_PROMPT = """
 You are an expert pandas code generator. Your task is to generate ONLY executable pandas code based on user queries about Excel data.
 
