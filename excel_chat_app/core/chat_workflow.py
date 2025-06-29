@@ -22,6 +22,7 @@ from excel_chat_app.core.data_handler import DataManager
 from excel_chat_app.logger_config import logger
 
 class ExcelChatState(TypedDict):
+    """"State for the Excel chat workflow."""
     messages: Annotated[list, add_messages]
     user_query: str
     generated_code: str
@@ -42,6 +43,7 @@ class ChatWorkflow:
         logger.info("ChatWorkflow initialized.")
 
     def _build_graph(self):
+        """Builds the state graph for the chat workflow."""
         workflow = StateGraph(ExcelChatState)
         workflow.add_node("check_query_validity", self.check_query_validity_node)
         workflow.add_node("generate_code", self.generate_code_node)
@@ -74,6 +76,7 @@ class ChatWorkflow:
         return workflow.compile()
 
     def check_query_validity_node(self, state: ExcelChatState) -> ExcelChatState:
+        """Checks if the user query is valid for processing."""
         logger.info("Checking query validity.")
         prompt = ChatPromptTemplate.from_messages([("human", QUERY_VALIDITY_PROMPT)]).format_messages(user_query=state["user_query"])
         response = self.llm.invoke(prompt)
@@ -87,6 +90,7 @@ class ChatWorkflow:
         return state
 
     def generate_code_node(self, state: ExcelChatState) -> ExcelChatState:
+        """Generates executable code based on the user query and available dataframes."""
         logger.info("Generating code.")
         try:
             df_info = self.data_manager.get_dataframe_info()
@@ -118,6 +122,7 @@ class ChatWorkflow:
             return state
 
     def execute_code_node(self, state: ExcelChatState) -> ExcelChatState:
+        """Executes the generated code and captures the output."""
         logger.info("Executing code.")
         try:
             if not state["generated_code"]:
@@ -181,6 +186,7 @@ class ChatWorkflow:
             return state
 
     def should_retry_node(self, state: ExcelChatState) -> str:
+        """Determines the next action based on the execution result and error message."""
         if state["error_message"] and state.get("retry_count", 0) < 2:
             return "retry"
         elif state["error_message"]:
@@ -217,6 +223,7 @@ class ChatWorkflow:
         return state
 
     def _analyze_error(self, error_message: str, code: str) -> str:
+        """Analyzes the error message and provides specific suggestions for fixing the code."""
         analysis = []
         if "KeyError" in error_message:
             analysis.append("- Column name not found. Check exact column names from dataframe info.")
@@ -231,6 +238,7 @@ class ChatWorkflow:
         return "\n".join(analysis) if analysis else "General error - check syntax and data types."
 
     def clarify_node(self, state: ExcelChatState) -> ExcelChatState:
+        """Handles cases where the query needs clarification due to data structure issues."""
         clarification_msg = f"""I apologize, but I'm having trouble processing your query: "{state['user_query']}"
 The issue appears to be related to data structure or column names. Here's what you can try:
 1. Check if the column names in your query match exactly with the available columns
@@ -244,6 +252,7 @@ Please rephrase your question or provide more specific details."""
         return state
 
     def generate_final_answer_node(self, state: ExcelChatState) -> ExcelChatState:
+        """Generates the final answer based on the execution result and user query."""
         try:
             prompt = ChatPromptTemplate.from_messages([("human", FINAL_ANSWER_PROMPT)]).format_messages(
                 user_query=state["user_query"],
