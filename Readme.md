@@ -14,6 +14,16 @@ The Excel Chat Assistant is a powerful and intuitive Streamlit application that 
 *   **Error Handling and Retry**: The system can automatically retry and fix code generation errors.
 *   **Chat History Export**: Export your chat history for future reference.
 
+## 🛠️ Tech Stack
+
+*   **Core Language**: Python
+*   **Web Framework**: Streamlit
+*   **Data Manipulation**: Pandas
+*   **LLM Framework**: LangChain
+*   **Agent/Workflow Engine**: LangGraph
+*   **LLM Providers**: Groq, OpenAI, Google Gemini, Together AI
+*   **Package Management**: uv
+
 ## 🏗️ System Architecture
 
 The application is built with a modular architecture that separates the user interface, data handling, and core logic.
